@@ -9,15 +9,12 @@ class RateLimiter
       now = Time.utc
       @@requests[ip] ||= [] of Time
       
-      # Remove requests outside the time window
       @@requests[ip].reject! { |t| (now - t).total_seconds > window }
       
-      # Check if limit exceeded
       if @@requests[ip].size >= limit
         return false
       end
       
-      # Record this request
       @@requests[ip] << now
       true
     end

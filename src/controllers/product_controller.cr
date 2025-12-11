@@ -11,9 +11,8 @@ module ProductController
     page = env.params.query["page"]?.try(&.to_i) || 1
     per_page = env.params.query["per_page"]?.try(&.to_i) || 20
     
-    # Ensure positive values
     page = 1 if page < 1
-    per_page = 100 if per_page > 100  # Max 100 items per page
+    per_page = 100 if per_page > 100
     per_page = 1 if per_page < 1
     
     products = Product.paginate(page, per_page)
@@ -32,7 +31,10 @@ module ProductController
 
   def create(env)
     begin
-      fields = env.params.json["fields"].as_h
+      json_fields = env.params.json["fields"]?
+      return halt(env, status_code: 400, response: {error: "Invalid Payload. Expected {fields: {...}}"}.to_json) unless json_fields
+      
+      fields = json_fields.as_h
       product = Product.create(fields)
       product.to_json
     rescue
@@ -54,7 +56,10 @@ module ProductController
   def update(env)
     id = env.params.url["id"].to_i?
     begin
-      new_fields = env.params.json["fields"].as_h
+      json_fields = env.params.json["fields"]?
+      return halt(env, status_code: 400, response: {error: "Invalid Payload"}.to_json) unless json_fields
+      
+      new_fields = json_fields.as_h
       product = Product.update(id, new_fields)
       
       if product
