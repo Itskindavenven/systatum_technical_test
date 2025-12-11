@@ -13,7 +13,6 @@ A high-performance REST API for managing product data with arbitrary fields, bui
 - [Getting Started](#getting-started)
 - [Testing](#testing)
 - [Design Decisions](#design-decisions)
-- [Production Considerations](#production-considerations)
 - [License](#license)
 
 ## Overview
