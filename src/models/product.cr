@@ -15,7 +15,9 @@ class Product
   end
 
   def self.find(id : Int32)
-    @@storage[id]?
+    fields = @@storage[id]?
+    return nil unless fields
+    {id: id, fields: fields}
   end
 
   def self.update(id : Int32, new_fields : Hash(String, JSON::Any))
@@ -45,7 +47,7 @@ class Product
     start_index = (page - 1) * per_page
     end_index = start_index + per_page - 1
     
-    all_products[start_index..end_index]? || [] of Hash(Symbol, Int32 | Hash(String, JSON::Any))
+    all_products[start_index..end_index]? || [] of NamedTuple(id: Int32, fields: Hash(String, JSON::Any))
   end
 
   def self.count

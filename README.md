@@ -300,16 +300,16 @@ curl "http://localhost:3000/products?page=1&per_page=10"
     {
       "id": 2,
       "fields": {
-        "name": "Laptop",
-        "price": 15000000
+        "name": "Supermie",
+        "price": 3000
       }
     }
   ],
   "pagination": {
     "page": 1,
     "per_page": 10,
-    "total": 25,
-    "total_pages": 3
+    "total": 2,
+    "total_pages": 1
   }
 }
 ```
@@ -599,7 +599,16 @@ http DELETE :3000/products/1
 ### 1. Partial Update Strategy
 **Problem:** How to update only specific fields without losing existing data?
 
-**Solution:** Implemented a **merge strategy** in the `Product.update` method:
+**Solution:** The API implements a **MERGE** strategy. If you provide:
+```json
+{"fields": {"price": 20000}}
+```
+It merges this with the existing product data, only updating the `price` while keeping other fields intact.
+
+**Why PUT instead of PATCH?**
+I used the `PUT` method for updates despite implementing `PATCH` semantics (merge) because `PUT` is widely accepted for idempotent updates and simplifies the API surface compared to managing both `PUT` (replace) and `PATCH` (merge) methods for this challenge.
+
+Implemented a **merge strategy** in the `Product.update` method:
 ```crystal
 def self.update(id : Int32, new_fields : Hash(String, JSON::Any))
   @@mutex.synchronize do

@@ -10,14 +10,14 @@ module ProductController
   def index(env)
     page = env.params.query["page"]?.try(&.to_i) || 1
     per_page = env.params.query["per_page"]?.try(&.to_i) || 20
-    
+
     page = 1 if page < 1
     per_page = 100 if per_page > 100
     per_page = 1 if per_page < 1
-    
+
     products = Product.paginate(page, per_page)
     total = Product.count
-    
+
     {
       data: products,
       pagination: {
@@ -32,48 +32,82 @@ module ProductController
   def create(env)
     begin
       json_fields = env.params.json["fields"]?
-      return halt(env, status_code: 400, response: {error: "Invalid Payload. Expected {fields: {...}}"}.to_json) unless json_fields
       
-      fields = json_fields.as_h
+      unless json_fields
+        env.response.status_code = 400
+        return {error: "Invalid Payload. Expected {fields: {...}}"}.to_json
+      end
+
+      fields = json_fields.as(Hash(String, JSON::Any))
       product = Product.create(fields)
       product.to_json
-    rescue
-      halt env, status_code: 400, response: {error: "Invalid Payload. Expected {fields: {...}}"}.to_json
+    rescue ex
+      puts "Create Error: #{ex.message}"
+      env.response.status_code = 400
+      {error: "Invalid Payload or Data Format"}.to_json
     end
   end
 
   def show(env)
-    id = env.params.url["id"].to_i?
+    begin
+      id_str = env.params.url["id"]
+      id = id_str.to_i
+    rescue
+      env.response.status_code = 400
+      return {error: "Invalid Product ID"}.to_json
+    end
+    
     product = Product.find(id)
     
     if product
       product.to_json
     else
-      halt env, status_code: 404, response: {error: "Product not found"}.to_json
+      env.response.status_code = 404
+      {error: "Product not found"}.to_json
     end
   end
 
   def update(env)
-    id = env.params.url["id"].to_i?
+    begin
+      id_str = env.params.url["id"]
+      id = id_str.to_i
+    rescue
+      env.response.status_code = 400
+      return {error: "Invalid Product ID"}.to_json
+    end
+
     begin
       json_fields = env.params.json["fields"]?
-      return halt(env, status_code: 400, response: {error: "Invalid Payload"}.to_json) unless json_fields
+      unless json_fields
+        env.response.status_code = 400
+        return {error: "Invalid Payload. Expected 'fields'"}.to_json
+      end
       
-      new_fields = json_fields.as_h
+      new_fields = json_fields.as(Hash(String, JSON::Any))
       product = Product.update(id, new_fields)
       
       if product
         product.to_json
       else
-        halt env, status_code: 404, response: {error: "Product not found"}.to_json
+        env.response.status_code = 404
+        {error: "Product not found"}.to_json
       end
-    rescue
-      halt env, status_code: 400, response: {error: "Invalid Payload"}.to_json
+    rescue ex
+      puts "Update Error: #{ex.message}"
+      env.response.status_code = 400
+      {error: "Invalid Payload or Data Format"}.to_json
     end
   end
 
   def delete(env)
-    id = env.params.url["id"].to_i?
+    begin
+      id_str = env.params.url["id"]
+      id = id_str.to_i
+    rescue
+      env.response.status_code = 400
+      return {error: "Invalid Product ID"}.to_json
+    end
+
     Product.delete(id)
     {message: "Product deleted"}.to_json
   end

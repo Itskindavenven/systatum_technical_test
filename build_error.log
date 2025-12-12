@@ -1,0 +1,7 @@
+Showing last frame. Use --error-trace for full trace.
+
+In src/controllers/product_controller.cr:40:28
+
+ 40 | fields = json_fields.as_h
+                           ^---
+Error: undefined method 'as_h' for Array(JSON::Any)[33;1m (compile-time type is (Array(JSON::Any) | Bool | Float64 | Hash(String, JSON::Any) | Int64 | String))[39;22m
